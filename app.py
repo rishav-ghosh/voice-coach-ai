@@ -20,31 +20,35 @@ from langchain_groq import ChatGroq
 
 load_dotenv()
 
-try:
-    GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-except Exception:
-    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+load_dotenv()
 
-try:
-    GROQ_LLM_MODEL = st.secrets["GROQ_LLM_MODEL"]
-except Exception:
-    GROQ_LLM_MODEL = os.getenv(
-        "GROQ_LLM_MODEL",
-        "qwen/qwen3.8-27b"
-    )
+def get_secret(key_name: str, default=None):
+    # 1. Check top-level st.secrets
+    try:
+        if key_name in st.secrets:
+            return str(st.secrets[key_name]).strip()
+        # 2. Check inside a [secrets] or [general] section if nested
+        for section in st.secrets.values():
+            if isinstance(section, dict) and key_name in section:
+                return str(section[key_name]).strip()
+    except Exception:
+        pass
+    # 3. Fallback to local .env / OS environment
+    val = os.getenv(key_name, default)
+    return str(val).strip() if val else default
 
-try:
-    GROQ_WHISPER_MODEL = st.secrets["GROQ_WHISPER_MODEL"]
-except Exception:
-    GROQ_WHISPER_MODEL = os.getenv(
-        "GROQ_WHISPER_MODEL",
-        "whisper-large-v3-turbo"
-    )
+GROQ_API_KEY = get_secret("GROQ_API_KEY")
+GROQ_LLM_MODEL = get_secret("GROQ_LLM_MODEL", "llama-3.3-70b-versatile")
+GROQ_WHISPER_MODEL = get_secret("GROQ_WHISPER_MODEL", "whisper-large-v3-turbo")
 
 if not GROQ_API_KEY:
     st.error("GROQ_API_KEY is not configured.")
+    # Debug helper: shows which secret keys Streamlit Cloud actually loaded (names only, never values)
+    try:
+        st.write("Available secret keys:", list(st.secrets.keys()))
+    except Exception as e:
+        st.write("st.secrets error:", e)
     st.stop()
-
 # ============================================================
 # PAGE CONFIG
 # ============================================================
