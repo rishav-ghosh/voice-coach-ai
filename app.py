@@ -20,18 +20,30 @@ from langchain_groq import ChatGroq
 
 load_dotenv()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+try:
+    GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+except Exception:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-if not GROQ_API_KEY:
-    try:
-        GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-    except Exception:
-        GROQ_API_KEY = None
+try:
+    GROQ_LLM_MODEL = st.secrets["GROQ_LLM_MODEL"]
+except Exception:
+    GROQ_LLM_MODEL = os.getenv(
+        "GROQ_LLM_MODEL",
+        "qwen/qwen3.8-27b"
+    )
+
+try:
+    GROQ_WHISPER_MODEL = st.secrets["GROQ_WHISPER_MODEL"]
+except Exception:
+    GROQ_WHISPER_MODEL = os.getenv(
+        "GROQ_WHISPER_MODEL",
+        "whisper-large-v3-turbo"
+    )
 
 if not GROQ_API_KEY:
     st.error("GROQ_API_KEY is not configured.")
     st.stop()
-
 
 # ============================================================
 # PAGE CONFIG
